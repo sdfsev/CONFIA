@@ -1,12 +1,29 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-// Always initialize GoogleGenAI with a named apiKey parameter as required by guidelines
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize GoogleGenAI only when needed (lazy loading)
+let ai: GoogleGenAI | null = null;
+
+const getGeminiClient = () => {
+  if (!ai) {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      console.warn('⚠️ Gemini API Key not set. Search suggestions will be disabled.');
+      return null;
+    }
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+};
 
 export const getSmartSearchSuggestions = async (query: string) => {
   try {
-    const response = await ai.models.generateContent({
+    const client = getGeminiClient();
+    if (!client) {
+      return { category: query, location: "", tags: [] };
+    }
+
+    const response = await client.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Analise a busca do usuário: "${query}". 
       Extraia o tipo de serviço (categoria) e a localização (bairro ou cidade).
@@ -25,7 +42,12 @@ export const getSmartSearchSuggestions = async (query: string) => {
 
 export const generateProfileSummary = async (profileName: string, skills: string[]) => {
   try {
-    const response = await ai.models.generateContent({
+    const client = getGeminiClient();
+    if (!client) {
+      return "Profissional verificado com excelência em serviços residenciais e comerciais.";
+    }
+
+    const response = await client.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Crie uma biografia profissional curta (máximo 3 frases) para ${profileName}. 
       Habilidades: ${skills.join(', ')}. O tom deve ser extremamente confiável e premium.`
