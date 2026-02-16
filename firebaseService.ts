@@ -13,6 +13,13 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Debug: verificar se variáveis estão carregadas
+console.log('Firebase Config loaded:', {
+  apiKey: firebaseConfig.apiKey ? 'Loaded ✓' : 'Missing ✗',
+  authDomain: firebaseConfig.authDomain ? 'Loaded ✓' : 'Missing ✗',
+  projectId: firebaseConfig.projectId ? 'Loaded ✓' : 'Missing ✗'
+});
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
