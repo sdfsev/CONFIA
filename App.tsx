@@ -14,6 +14,7 @@ import ProfileView from './views/ProfileView';
 import DashboardView from './views/DashboardView';
 import OnboardingView from './views/OnboardingView';
 import PlansView from './views/PlansView';
+import SupportView from './views/SupportView';
 import NotificationsView from './views/NotificationsView';
 import AdminView from './views/AdminView';
 import BottomNav from './components/BottomNav';
@@ -46,7 +47,7 @@ const AppContent: React.FC = () => {
         <Route path="/register" element={<RegisterView />} />
         <Route path="/professional-register" element={<ProfessionalRegisterView />} />
         <Route path="/search-results" element={<SearchResultsView />} />
-        
+
         {/* Protected Routes */}
         <Route
           path="/home"
@@ -97,6 +98,14 @@ const AppContent: React.FC = () => {
           }
         />
         <Route
+          path="/support"
+          element={
+            <ProtectedRoute>
+              <SupportView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/notifications"
           element={
             <ProtectedRoute>
@@ -113,7 +122,7 @@ const AppContent: React.FC = () => {
           }
         />
       </Routes>
-      
+
       {!hideNav && <BottomNav />}
     </div>
   );

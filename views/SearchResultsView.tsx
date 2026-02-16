@@ -131,11 +131,10 @@ const SearchResultsView: React.FC = () => {
       <div className="pl-5 pb-6 overflow-x-auto hide-scrollbar flex gap-3 sticky top-[152px] bg-background-light dark:bg-background-dark z-30 py-2">
         <button
           onClick={() => setSortBy('rating')}
-          className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-semibold shadow-md transition-transform active:scale-95 ${
-            sortBy === 'rating'
-              ? 'bg-primary text-gray-900 shadow-primary/20'
-              : 'bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-primary/50'
-          }`}
+          className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-semibold shadow-md transition-transform active:scale-95 ${sortBy === 'rating'
+            ? 'bg-primary text-gray-900 shadow-primary/20'
+            : 'bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-primary/50'
+            }`}
         >
           Recomendados
         </button>
@@ -251,8 +250,8 @@ const SearchResultsView: React.FC = () => {
       </nav>
     </div>
   );
-    </div>
-  );
+
+
 };
 
 export default SearchResultsView;
