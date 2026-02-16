@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import LandingView from './views/LandingView';
 import LoginView from './views/LoginView';
 import RegisterView from './views/RegisterView';
 import HomeView from './views/HomeView';
@@ -31,17 +32,20 @@ const AppContent: React.FC = () => {
   }, [isDark]);
 
   // Hide BottomNav on certain screens
-  const publicPages = ['/login', '/register'];
+  const publicPages = ['/', '/login', '/register'];
   const hideNav = publicPages.includes(location.pathname) || ['/onboarding', '/admin'].includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark overflow-x-hidden">
       <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<LandingView />} />
         <Route path="/login" element={<LoginView />} />
         <Route path="/register" element={<RegisterView />} />
         
+        {/* Protected Routes */}
         <Route
-          path="/"
+          path="/home"
           element={
             <ProtectedRoute>
               <HomeView />
