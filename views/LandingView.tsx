@@ -3,13 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../firebaseService';
 import { collection, getDocs } from 'firebase/firestore';
 import { Professional } from '../types';
+import { BRAZILIAN_CITIES, AVAILABLE_SERVICES, filterCities } from '../constants/searchConstants';
 
 const LandingView: React.FC = () => {
   const navigate = useNavigate();
   const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Search state
   const [searchService, setSearchService] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [cityDropdown, setCityDropdown] = useState<string[]>([]);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
 
   const categories = [
     { name: 'Limpeza', icon: 'cleaning_services' },
@@ -39,6 +44,33 @@ const LandingView: React.FC = () => {
     loadProfessionals();
   }, []);
 
+  // Handle cidade input/dropdown
+  const handleCityChange = (value: string) => {
+    setSearchLocation(value);
+    if (value.length > 0) {
+      const filtered = filterCities(value);
+      setCityDropdown(filtered);
+      setShowCityDropdown(true);
+    } else {
+      setCityDropdown([]);
+      setShowCityDropdown(false);
+    }
+  };
+
+  const selectCity = (city: string) => {
+    setSearchLocation(city);
+    setShowCityDropdown(false);
+  };
+
+  // Handle busca
+  const handleSearch = () => {
+    if (!searchService || !searchLocation) {
+      alert('Por favor, selecione um serviço e uma localização');
+      return;
+    }
+    navigate(`/search-results?service=${encodeURIComponent(searchService)}&location=${encodeURIComponent(searchLocation)}`);
+  };
+
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark font-display">
       {/* Header */}
@@ -48,12 +80,12 @@ const LandingView: React.FC = () => {
             <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
               <span className="text-white font-extrabold text-xl">C</span>
             </div>
-            <span className="font-extrabold text-xl tracking-tight">CONFIA</span>
+            <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">CONFIA</span>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => navigate('/register')}
-              className="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-900 dark:text-white"
             >
               TRABALHAR
             </button>
@@ -80,33 +112,59 @@ const LandingView: React.FC = () => {
 
         {/* Search Bar */}
         <section className="px-4 -mt-2 mb-10">
-          <div className="bg-white dark:bg-slate-800 p-2 rounded-3xl shadow-xl shadow-blue-600/5 border border-slate-100 dark:border-slate-700">
+          <div className="bg-white dark:bg-slate-800 p-2 rounded-3xl shadow-xl shadow-blue-600/5 border border-slate-100 dark:border-slate-700 relative">
             <div className="space-y-1">
               {/* Serviço */}
               <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
-                <span className="material-icons-round text-blue-600 text-xl">search</span>
-                <input
-                  type="text"
-                  placeholder="Qual serviço você procura?"
+                <span className="material-icons-round text-blue-600 text-xl">home_repair_service</span>
+                <select
                   value={searchService}
                   onChange={(e) => setSearchService(e.target.value)}
-                  className="w-full bg-transparent border-none focus:ring-0 text-slate-800 dark:text-white placeholder:text-slate-400 font-medium outline-none"
-                />
+                  className="w-full bg-transparent border-none focus:ring-0 text-slate-800 dark:text-white placeholder:text-slate-400 font-medium outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">Qual serviço você procura?</option>
+                  {AVAILABLE_SERVICES.map(service => (
+                    <option key={service} value={service}>
+                      {service}
+                    </option>
+                  ))}
+                </select>
               </div>
-              {/* Localização + Filtro */}
-              <div className="flex items-center gap-2">
+
+              {/* Localização + Botão Busca */}
+              <div className="flex items-center gap-2 relative">
                 <div className="flex-grow flex items-center gap-3 px-4 py-3">
                   <span className="material-icons-round text-slate-400 text-xl">location_on</span>
-                  <input
-                    type="text"
-                    placeholder="Sua localização"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                    className="w-full bg-transparent border-none focus:ring-0 text-slate-800 dark:text-white placeholder:text-slate-400 font-medium outline-none"
-                  />
+                  <div className="w-full relative">
+                    <input
+                      type="text"
+                      placeholder="Sua localização"
+                      value={searchLocation}
+                      onChange={(e) => handleCityChange(e.target.value)}
+                      onFocus={() => searchLocation.length > 0 && setShowCityDropdown(true)}
+                      className="w-full bg-transparent border-none focus:ring-0 text-slate-800 dark:text-white placeholder:text-slate-400 font-medium outline-none"
+                    />
+                    {/* City Dropdown */}
+                    {showCityDropdown && cityDropdown.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                        {cityDropdown.map(city => (
+                          <button
+                            key={city}
+                            onClick={() => selectCity(city)}
+                            className="w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white text-sm font-medium border-b border-slate-100 dark:border-slate-700 last:border-b-0"
+                          >
+                            {city}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <button className="m-1 w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity active:scale-95">
-                  <span className="material-icons-round text-xl">tune</span>
+                <button
+                  onClick={handleSearch}
+                  className="m-1 w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity active:scale-95 shadow-lg shadow-blue-600/25"
+                >
+                  <span className="material-icons-round text-xl">search</span>
                 </button>
               </div>
             </div>
@@ -121,14 +179,22 @@ const LandingView: React.FC = () => {
           </div>
           <div className="grid grid-cols-4 gap-4">
             {categories.map((cat) => (
-              <div key={cat.name} className="flex flex-col items-center gap-2">
+              <button
+                key={cat.name}
+                onClick={() => {
+                  setSearchService(cat.name);
+                  setCityDropdown(BRAZILIAN_CITIES.slice(0, 10));
+                  setShowCityDropdown(true);
+                }}
+                className="flex flex-col items-center gap-2 group"
+              >
                 <div className="w-16 h-16 bg-blue-50 dark:bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-600/20 transition-colors active:scale-90 cursor-pointer">
                   <span className="material-icons-round text-3xl">{cat.icon}</span>
                 </div>
                 <span className="text-xs font-bold text-slate-600 dark:text-slate-300 text-center">
                   {cat.name}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </section>
@@ -203,7 +269,11 @@ const LandingView: React.FC = () => {
           )}
 
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => {
+              setSearchService('');
+              setSearchLocation('');
+              window.scrollTo(0, 0);
+            }}
             className="w-full mt-8 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             Ver todos os profissionais

@@ -8,6 +8,7 @@ import LoginView from './views/LoginView';
 import RegisterView from './views/RegisterView';
 import HomeView from './views/HomeView';
 import SearchView from './views/SearchView';
+import SearchResultsView from './views/SearchResultsView';
 import ProfileView from './views/ProfileView';
 import DashboardView from './views/DashboardView';
 import OnboardingView from './views/OnboardingView';
@@ -42,6 +43,7 @@ const AppContent: React.FC = () => {
         <Route path="/" element={<LandingView />} />
         <Route path="/login" element={<LoginView />} />
         <Route path="/register" element={<RegisterView />} />
+        <Route path="/search-results" element={<SearchResultsView />} />
         
         {/* Protected Routes */}
         <Route
