@@ -16,12 +16,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
+    console.log('🔐 AuthContext: Setting up onAuthStateChanged listener');
+    try {
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        console.log('🔐 Auth state changed:', currentUser ? 'User logged in' : 'User logged out');
+        setUser(currentUser);
+        setLoading(false);
+      });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('❌ AuthContext setup error:', error);
+      setLoading(false);
+    }
   }, []);
 
   const logout = useCallback(async () => {

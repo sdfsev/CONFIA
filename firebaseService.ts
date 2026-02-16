@@ -13,21 +13,39 @@ const firebaseConfig = {
   appId: "1:595949864703:web:5b381a4d9f091287da2eca"
 };
 
-// Debug: verificar se Firebase está inicializando
-console.log('🔥 Firebase initializing...', firebaseConfig);
+console.log('🔥 Firebase config:', firebaseConfig);
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+let auth: Auth;
+let db: Firestore;
+let storage: FirebaseStorage;
 
-console.log('✅ Firebase initialized successfully');
+try {
+  // Initialize Firebase
+  console.log('🔥 Initializing Firebase app...');
+  app = initializeApp(firebaseConfig);
+  console.log('✅ Firebase app initialized');
 
-// Initialize Firebase Authentication
-export const auth: Auth = getAuth(app);
+  // Initialize Firebase Authentication
+  console.log('🔥 Initializing Auth...');
+  auth = getAuth(app);
+  console.log('✅ Auth initialized');
 
-// Initialize Cloud Firestore
-export const db: Firestore = getFirestore(app);
+  // Initialize Cloud Firestore
+  console.log('🔥 Initializing Firestore...');
+  db = getFirestore(app);
+  console.log('✅ Firestore initialized');
 
-// Initialize Storage
-export const storage: FirebaseStorage = getStorage(app);
+  // Initialize Storage
+  console.log('🔥 Initializing Storage...');
+  storage = getStorage(app);
+  console.log('✅ Storage initialized');
 
+  console.log('✅ Firebase fully initialized successfully');
+} catch (error) {
+  console.error('❌ Firebase initialization error:', error);
+  throw error;
+}
+
+export { auth, db, storage };
 export default app;
