@@ -1,0 +1,118 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confia - Profissionais de Elite</title>
+    <script>
+      // Polyfill completo para QWebChannel (used by Qt/Electron environments)
+      // Define ANTES de qualquer script carregar
+      window.QWebChannel = window.QWebChannel || {};
+      
+      if (!window.QWebChannelMessageDispatcher) {
+        window.QWebChannelMessageDispatcher = {
+          dispatch: function(callback) {
+            if (callback) callback({});
+          }
+        };
+      }
+      
+      // Define a classe QWebChannel completa
+      if (typeof window.QWebChannel !== 'function') {
+        window.QWebChannel = class {
+          constructor(transport, initCallback) {
+            this.transport = transport;
+            this.objects = {};
+            if (initCallback) {
+              initCallback(this);
+            }
+          }
+        };
+      }
+      
+      // Intercepta XMLHttpRequest para bloquear qwebchannel
+      const originalOpen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function(method, url) {
+        if (typeof url === 'string' && (url.includes('qwebchannel') || url.startsWith('qt://') || url.startsWith('qrc://'))) {
+          console.debug('[QWebChannel Polyfill] Blocked XHR:', url);
+          return;
+        }
+        return originalOpen.apply(this, arguments);
+      };
+      
+      // Intercepta fetch() para bloquear qwebchannel
+      const originalFetch = window.fetch;
+      window.fetch = function(resource, init) {
+        const url = typeof resource === 'string' ? resource : resource.url || '';
+        if (url.includes('qwebchannel') || url.startsWith('qt://') || url.startsWith('qrc://')) {
+          console.debug('[QWebChannel Polyfill] Blocked fetch:', url);
+          return Promise.resolve(new Response('', { status: 404 }));
+        }
+        return originalFetch.apply(this, arguments);
+      };
+      
+      // Registra Service Worker para bloquear no nível de rede
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/public/sw.js').catch(() => {
+          // Service Worker pode falhar em dev, é ok
+        });
+      }
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round|Material+Icons+Outlined" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1363ec",
+                        "primary-dark": "#0e4cb5",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#0A1F44",
+                        "surface-dark": "#112240",
+                        "gold": "#ffd900",
+                        "whatsapp": "#25D366"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        body { font-family: 'Manrope', sans-serif; }
+        .shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "recharts": "https://esm.sh/recharts@^3.7.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
