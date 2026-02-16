@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebaseService';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { Professional } from '../types';
 import { BRAZILIAN_CITIES, AVAILABLE_SERVICES, filterCities } from '../constants/searchConstants';
 
@@ -9,31 +9,34 @@ const LandingView: React.FC = () => {
   const navigate = useNavigate();
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Search state
   const [searchService, setSearchService] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
   const [cityDropdown, setCityDropdown] = useState<string[]>([]);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
 
+  // Categorias com ícones
   const categories = [
-    { name: 'Limpeza', icon: 'cleaning_services' },
-    { name: 'Piscina', icon: 'pool' },
-    { name: 'Jardim', icon: 'grass' },
-    { name: 'Ar-cond.', icon: 'ac_unit' },
+    { name: 'Diaristas', icon: 'cleaning_services' },
+    { name: 'Eletricistas', icon: 'electrical_services' },
+    { name: 'Babás', icon: 'child_care' },
+    { name: 'Encanadores', icon: 'plumbing' },
+    { name: 'Pintores', icon: 'format_paint' },
+    { name: 'Reparos', icon: 'handyman' },
+    { name: 'Mudanças', icon: 'local_shipping' },
   ];
 
-  // Carregar profissionais
+  // Carregar profissionais verificados
   useEffect(() => {
     const loadProfessionals = async () => {
       try {
-        const snapshot = await getDocs(collection(db, 'professionals'));
+        const snapshot = await getDocs(
+          query(collection(db, 'professionals'), where('status', '==', 'active'))
+        );
         const data = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Professional[];
-        // Pegar apenas 4 primeiros (destaques)
-        setProfessionals(data.slice(0, 4));
+        setProfessionals(data.slice(0, 1)); // Featured professional
       } catch (error) {
         console.error('Erro ao carregar profissionais:', error);
       } finally {
@@ -72,110 +75,143 @@ const LandingView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark font-display">
+    <div className="min-h-screen bg-background-light dark:bg-background-dark font-display flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white dark:bg-navy-light/95 border-b border-gray-100 dark:border-gray-800 shadow-sm backdrop-blur-sm ">
+        <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto w-full">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-              <span className="text-white font-extrabold text-xl">C</span>
+            {/* Logo */}
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-navy dark:bg-primary text-primary dark:text-navy">
+              <span className="material-symbols-outlined" style={{fontSize: '20px', fontVariationSettings: "'FILL' 1"}}>shield_person</span>
             </div>
-            <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">CONFIA</span>
+            <h1 className="text-xl font-bold tracking-tight text-navy dark:text-white">Confia</h1>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => navigate('/register')}
-              className="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-900 dark:text-white"
-            >
-              TRABALHAR
-            </button>
-            <button
-              onClick={() => navigate('/login')}
-              className="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white rounded-full shadow-sm hover:opacity-90 transition-opacity"
-            >
-              APOIAR
-            </button>
-          </div>
+          <button
+            onClick={() => navigate('/professional-register')}
+            className="text-xs font-semibold text-navy dark:text-primary border border-navy dark:border-primary px-3 py-1.5 rounded-full hover:bg-navy hover:text-white dark:hover:bg-primary dark:hover:text-navy transition-colors duration-200"
+          >
+            Sou Profissional
+          </button>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto pb-20">
+      {/* Main Content Wrapper */}
+      <main className="flex-1 w-full max-w-lg mx-auto flex flex-col">
         {/* Hero Section */}
-        <section className="px-6 py-10 text-center">
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight mb-4 text-slate-900 dark:text-white">
-            O profissional que sua casa precisa...
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed">
-            Conecte-se com especialistas locais sem taxas de intermediação.
-          </p>
-        </section>
+        <section className="relative w-full overflow-hidden bg-navy dark:bg-background-dark">
+          {/* Background Decoration */}
+          <div className="absolute inset-0 opacity-20 dark:opacity-10 bg-[radial-gradient(#f4c025_1px,transparent_1px)] [background-size:20px_20px]"></div>
+          <div className="relative px-5 pt-10 pb-12 flex flex-col gap-6 z-10">
+            <div className="space-y-3 text-center">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider border border-primary/20">
+                <span className="material-symbols-outlined text-sm">verified_user</span>
+                100% Verificado
+              </span>
+              <h2 className="text-3xl font-black text-white leading-tight tracking-tight">
+                Confiança não se fala, <span className="text-primary">se mensura</span>
+              </h2>
+              <p className="text-gray-300 text-sm leading-relaxed max-w-[320px] mx-auto">
+                Encontre profissionais com score de assiduidade e antecedentes criminais verificados em tempo real.
+              </p>
+            </div>
 
-        {/* Search Bar */}
-        <section className="px-4 -mt-2 mb-10">
-          <div className="bg-white dark:bg-slate-800 p-2 rounded-3xl shadow-xl shadow-blue-600/5 border border-slate-100 dark:border-slate-700 relative">
-            <div className="space-y-1">
-              {/* Serviço */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
-                <span className="material-icons-round text-blue-600 text-xl">home_repair_service</span>
-                <select
-                  value={searchService}
-                  onChange={(e) => setSearchService(e.target.value)}
-                  className="w-full bg-transparent border-none focus:ring-0 text-slate-800 dark:text-white placeholder:text-slate-400 font-medium outline-none appearance-none cursor-pointer"
-                >
-                  <option value="">Qual serviço você procura?</option>
-                  {AVAILABLE_SERVICES.map(service => (
-                    <option key={service} value={service}>
-                      {service}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Localização + Botão Busca */}
-              <div className="flex items-center gap-2 relative">
-                <div className="flex-grow flex items-center gap-3 px-4 py-3">
-                  <span className="material-icons-round text-slate-400 text-xl">location_on</span>
-                  <div className="w-full relative">
-                    <input
-                      type="text"
-                      placeholder="Sua localização"
-                      value={searchLocation}
-                      onChange={(e) => handleCityChange(e.target.value)}
-                      onFocus={() => searchLocation.length > 0 && setShowCityDropdown(true)}
-                      className="w-full bg-transparent border-none focus:ring-0 text-slate-800 dark:text-white placeholder:text-slate-400 font-medium outline-none"
-                    />
-                    {/* City Dropdown */}
-                    {showCityDropdown && cityDropdown.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                        {cityDropdown.map(city => (
-                          <button
-                            key={city}
-                            onClick={() => selectCity(city)}
-                            className="w-full text-left px-4 py-2 hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-900 dark:text-white text-sm font-medium border-b border-slate-100 dark:border-slate-700 last:border-b-0"
-                          >
-                            {city}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+            {/* Search Card */}
+            <div className="bg-white dark:bg-navy-light rounded-2xl p-4 shadow-xl shadow-navy/20 dark:shadow-black/40 mt-2">
+              <form className="flex flex-col gap-3">
+                {/* Service Input */}
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary transition-colors">
+                    <span className="material-symbols-outlined">search</span>
                   </div>
+                  <input
+                    type="text"
+                    placeholder="Qual serviço você precisa?"
+                    onClick={() => setSearchService('')}
+                    list="service-list"
+                    value={searchService}
+                    onChange={(e) => setSearchService(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-3.5 border-2 border-gray-100 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-navy dark:text-white placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-0 text-sm font-medium transition-colors"
+                  />
+                  <datalist id="service-list">
+                    {AVAILABLE_SERVICES.map(service => (
+                      <option key={service} value={service} />
+                    ))}
+                  </datalist>
                 </div>
+
+                {/* Location Input */}
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary transition-colors">
+                    <span className="material-symbols-outlined">location_on</span>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Bairro ou CEP"
+                    value={searchLocation}
+                    onChange={(e) => handleCityChange(e.target.value)}
+                    onFocus={() => searchLocation.length > 0 && setShowCityDropdown(true)}
+                    className="block w-full pl-10 pr-3 py-3.5 border-2 border-gray-100 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-navy dark:text-white placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-0 text-sm font-medium transition-colors"
+                  />
+                  {/* City Dropdown */}
+                  {showCityDropdown && cityDropdown.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-gray-100 dark:border-gray-700 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto">
+                      {cityDropdown.map(city => (
+                        <button
+                          key={city}
+                          type="button"
+                          onClick={() => selectCity(city)}
+                          className="w-full text-left px-4 py-3 hover:bg-primary/10 dark:hover:bg-primary/20 text-navy dark:text-white text-sm font-medium border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors"
+                        >
+                          {city}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* CTA Button */}
                 <button
+                  type="button"
                   onClick={handleSearch}
-                  className="m-1 w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:opacity-90 transition-opacity active:scale-95 shadow-lg shadow-blue-600/25"
+                  className="mt-2 w-full bg-primary hover:bg-primary-dark text-navy font-bold py-4 px-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                 >
-                  <span className="material-icons-round text-xl">search</span>
+                  <span>Buscar Profissional Verificado</span>
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </section>
 
-        {/* Categories */}
-        <section className="mt-10 px-4 mb-10">
-          <div className="flex items-center justify-between mb-4 px-2">
-            <h2 className="font-bold text-lg text-slate-900 dark:text-white">Categorias</h2>
-            <button className="text-blue-600 text-sm font-bold hover:opacity-80">Ver todas</button>
+        {/* Social Proof */}
+        <section className="bg-white dark:bg-navy-light border-b border-gray-100 dark:border-gray-800 py-6 px-5">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
+            <div className="flex items-center -space-x-1">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-white dark:border-navy-light bg-gray-200 overflow-hidden">
+                  <div className="w-full h-full bg-gradient-to-br from-primary to-primary/50"></div>
+                </div>
+              ))}
+              <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-white dark:border-navy-light bg-navy text-primary text-[10px] font-bold">
+                +5k
+              </div>
+            </div>
+            <div className="flex flex-col items-center sm:items-start">
+              <div className="flex text-primary">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="material-symbols-outlined text-lg" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+                ))}
+              </div>
+              <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">Mais de 5.000 serviços concluídos</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Popular Categories */}
+        <section className="py-8 px-5">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-navy dark:text-white tracking-tight">Categorias Populares</h3>
+            <button className="text-sm font-semibold text-primary hover:text-primary-dark">Ver tudo</button>
           </div>
           <div className="grid grid-cols-4 gap-4">
             {categories.map((cat) => (
@@ -186,125 +222,59 @@ const LandingView: React.FC = () => {
                   setCityDropdown(BRAZILIAN_CITIES.slice(0, 10));
                   setShowCityDropdown(true);
                 }}
-                className="flex flex-col items-center gap-2 group"
+                className="group flex flex-col items-center gap-2"
               >
-                <div className="w-16 h-16 bg-blue-50 dark:bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-600/20 transition-colors active:scale-90 cursor-pointer">
-                  <span className="material-icons-round text-3xl">{cat.icon}</span>
+                <div className="w-16 h-16 rounded-2xl bg-white dark:bg-navy-light shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-center group-hover:border-primary group-hover:shadow-md transition-all duration-300">
+                  <span className="material-symbols-outlined text-navy dark:text-primary text-3xl group-hover:scale-110 transition-transform">{cat.icon}</span>
                 </div>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-300 text-center">
-                  {cat.name}
-                </span>
+                <span className="text-xs font-medium text-center text-gray-700 dark:text-gray-300 group-hover:text-navy dark:group-hover:text-primary">{cat.name}</span>
               </button>
             ))}
+            {/* Mais/Others */}
+            <button className="group flex flex-col items-center gap-2">
+              <div className="w-16 h-16 rounded-2xl bg-gray-50 dark:bg-gray-800 shadow-none border border-gray-100 dark:border-gray-700 flex items-center justify-center group-hover:bg-gray-100 dark:group-hover:bg-gray-700 transition-all duration-300">
+                <span className="material-symbols-outlined text-gray-400 dark:text-gray-500 text-3xl">grid_view</span>
+              </div>
+              <span className="text-xs font-medium text-center text-gray-500 dark:text-gray-400">Outros</span>
+            </button>
           </div>
         </section>
 
-        {/* Featured Professionals */}
-        <section className="mt-12 px-4 mb-12">
-          <div className="flex items-center justify-between mb-6 px-2">
-            <h2 className="font-bold text-xl text-slate-900 dark:text-white">Destaques da Região</h2>
-            <div className="flex gap-1">
-              <div className="w-2 h-2 rounded-full bg-blue-600"></div>
-              <div className="w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700"></div>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          ) : professionals.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-slate-500 dark:text-slate-400">Nenhum profissional encontrado.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              {professionals.map((pro) => (
-                <div
-                  key={pro.id}
-                  onClick={() => navigate(`/profile/${pro.id}`)}
-                  className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm border border-slate-100 dark:border-slate-700 relative cursor-pointer hover:shadow-md transition-shadow"
-                >
-                  <div className="absolute top-3 right-3 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    Destaque
-                  </div>
-                  <div className="flex flex-col items-center text-center">
-                    {/* Avatar */}
-                    <div className="relative mb-3">
-                      {pro.avatar ? (
-                        <img
-                          src={pro.avatar}
-                          alt={pro.name}
-                          className="w-20 h-20 rounded-full object-cover border-4 border-slate-50 dark:border-slate-700"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center border-4 border-slate-50 dark:border-slate-700 text-white text-2xl font-bold">
-                          {pro.name.charAt(0)}
-                        </div>
-                      )}
-                      <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
-                    </div>
-                    {/* Name */}
-                    <h3 className="font-bold text-sm mb-1 truncate w-full text-slate-900 dark:text-white">
-                      {pro.name}
-                    </h3>
-                    {/* Category */}
-                    <p className="text-slate-400 text-[11px] font-medium mb-2">
-                      {pro.category}
-                    </p>
-                    {/* Rating */}
-                    <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-700 px-2 py-1 rounded-full">
-                      <span className="material-icons-round text-yellow-400 text-sm">star</span>
-                      <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        {pro.rating.toFixed(1)}
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        ({pro.reviewCount})
-                      </span>
-                    </div>
+        {/* Featured Professional Banner */}
+        {!loading && professionals.length > 0 && (
+          <section className="px-5 pb-8">
+            <button
+              onClick={() => navigate(`/profile/${professionals[0].id}`)}
+              className="relative w-full h-40 rounded-2xl overflow-hidden shadow-lg group cursor-pointer"
+            >
+              <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{backgroundImage: `linear-gradient(to bottom, transparent 30%, rgba(15, 23, 42, 0.9)), url('${professionals[0].avatar || 'https://images.unsplash.com/photo-1607631814075-e51df1bdc82f?w=500&h=300&fit=crop'}')`}}>
+              </div>
+              <div className="absolute bottom-0 left-0 p-5 w-full">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="bg-primary text-navy text-[10px] font-bold px-2 py-0.5 rounded-sm">DESTAQUE</span>
+                  <div className="flex text-primary text-[10px]">
+                    {[...Array(5)].map((_, i) => (
+                      <span key={i} className="material-symbols-outlined text-sm" style={{fontVariationSettings: "'FILL' 1"}}>star</span>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-
-          <button
-            onClick={() => {
-              setSearchService('');
-              setSearchLocation('');
-              window.scrollTo(0, 0);
-            }}
-            className="w-full mt-8 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-          >
-            Ver todos os profissionais
-          </button>
-        </section>
+                <h3 className="text-white font-bold text-lg leading-tight">{professionals[0].name}</h3>
+                <p className="text-gray-200 text-xs mt-1 line-clamp-1">{professionals[0].category} • {professionals[0].location}</p>
+              </div>
+            </button>
+          </section>
+        )}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-6 py-3 pb-8 z-40 max-w-md mx-auto">
-        <div className="flex items-center justify-between">
+      {/* Bottom Navigation Bar */}
+      <nav className="sticky bottom-0 bg-white dark:bg-navy-light border-t border-gray-100 dark:border-gray-800 pb-safe pt-2 px-6">
+        <div className="flex items-center justify-center pb-3 max-w-lg mx-auto">
           <button
-            onClick={() => window.scrollTo(0, 0)}
-            className="flex flex-col items-center gap-1 text-blue-600 hover:opacity-80"
+            onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
+            className="flex flex-col items-center gap-1 text-primary hover:opacity-80 transition-opacity"
           >
-            <span className="material-icons-round">explore</span>
-            <span className="text-[10px] font-bold">Explorar</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-            <span className="material-icons-round">bookmark_border</span>
-            <span className="text-[10px] font-bold">Salvos</span>
-          </button>
-          <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-            <span className="material-icons-round">chat_bubble_outline</span>
-            <span className="text-[10px] font-bold">Mensagens</span>
-          </button>
-          <button
-            onClick={() => navigate('/login')}
-            className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-          >
-            <span className="material-icons-round">person_outline</span>
-            <span className="text-[10px] font-bold">Perfil</span>
+            <span className="material-symbols-outlined text-2xl" style={{fontVariationSettings: "'FILL' 1"}}>search</span>
+            <span className="text-[10px] font-medium">Buscar</span>
           </button>
         </div>
       </nav>

@@ -11,25 +11,31 @@ const SearchResultsView: React.FC = () => {
   const [filteredProfessionals, setFilteredProfessionals] = useState<Professional[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'rating' | 'price' | 'available'>('rating');
+  const [searchService, setSearchService] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
 
   const serviceParam = searchParams.get('service') || '';
   const locationParam = searchParams.get('location') || '';
 
-  // Carregar profissionais do Firestore
+  // Carregar profissionais do Firestore - apenas ativos
   useEffect(() => {
     const loadProfessionals = async () => {
       try {
         setLoading(true);
         let q;
 
-        // Buscar por categoria (serviço)
+        // Buscar por categoria (serviço) E status ativo
         if (serviceParam) {
           q = query(
             collection(db, 'professionals'),
-            where('category', '==', serviceParam)
+            where('category', '==', serviceParam),
+            where('status', '==', 'active')
           );
         } else {
-          q = query(collection(db, 'professionals'));
+          q = query(
+            collection(db, 'professionals'),
+            where('status', '==', 'active')
+          );
         }
 
         const snapshot = await getDocs(q);
@@ -73,205 +79,178 @@ const SearchResultsView: React.FC = () => {
   }, [sortBy, professionals]);
 
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark font-display pb-24">
-      {/* iOS Status Bar Spacer */}
-      <div className="h-12 w-full bg-background-light dark:bg-background-dark sticky top-0 z-50"></div>
+    <div className="max-w-md mx-auto min-h-screen relative pb-20 bg-background-light dark:bg-background-dark font-display">
+      {/* iOS Status Bar */}
+      <div className="h-12 w-full flex items-center justify-between px-6 sticky top-0 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-50">
+        <span className="text-sm font-semibold text-gray-800 dark:text-white">9:41</span>
+        <div className="flex gap-1.5">
+          <div className="w-4 h-4 rounded-full bg-gray-900 dark:bg-white/20"></div>
+          <div className="w-4 h-4 rounded-full bg-gray-900 dark:bg-white/20"></div>
+        </div>
+      </div>
 
-      {/* Header Navigation */}
-      <header className="sticky top-12 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-6 py-4">
-        <div className="max-w-md mx-auto flex items-center gap-4">
-          <button
-            onClick={() => navigate('/')}
-            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-800 rounded-full shadow-sm hover:opacity-80"
-          >
-            <span className="material-icons-round text-slate-600 dark:text-slate-300">chevron_left</span>
-          </button>
-          <div className="flex-1">
-            <h1 className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Busca
+      {/* Header */}
+      <header className="px-5 pt-2 pb-4 sticky top-12 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm z-40 transition-all duration-300">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+            >
+              <span className="material-icons-round text-2xl text-gray-800 dark:text-white">arrow_back</span>
+            </button>
+            <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+              {serviceParam} em {locationParam}
             </h1>
-            <p className="text-lg font-bold text-slate-900 dark:text-white truncate">
-              {serviceParam} em {locationParam || 'todas as cidades'}
-            </p>
           </div>
-          <button className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-800 rounded-full shadow-sm hover:opacity-80">
-            <span className="material-icons-round text-slate-600 dark:text-slate-300 text-xl">tune</span>
+          <button className="p-2 rounded-full bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-sm text-gray-600 dark:text-gray-300">
+            <span className="material-icons-round text-xl">filter_list</span>
+          </button>
+        </div>
+
+        {/* Search Tags */}
+        <div className="bg-white dark:bg-white/5 rounded-2xl p-2 flex items-center shadow-card border border-gray-100 dark:border-white/10">
+          <div className="bg-primary/20 w-10 h-10 rounded-xl flex items-center justify-center text-primary-dark dark:text-primary mr-3 shrink-0">
+            <span className="material-icons-round text-xl">search</span>
+          </div>
+          <div className="flex-1 min-w-0 flex items-center gap-2 overflow-hidden">
+            <div className="bg-gray-100 dark:bg-white/10 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-800 dark:text-white truncate">
+              {serviceParam}
+            </div>
+            <div className="bg-gray-100 dark:bg-white/10 px-3 py-1.5 rounded-lg text-sm font-semibold text-gray-800 dark:text-white truncate">
+              {locationParam}
+            </div>
+          </div>
+          <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <span className="material-icons-round text-xl">edit</span>
           </button>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto px-6 py-4">
-        {/* Filter Row */}
-        <div className="flex gap-3 overflow-x-auto py-4 -mx-6 px-6 hide-scrollbar">
-          <button
-            onClick={() => setSortBy('rating')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap shadow-md transition-all ${
-              sortBy === 'rating'
-                ? 'bg-blue-600 text-white shadow-blue-600/20'
-                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 shadow-sm border border-slate-100 dark:border-slate-700'
-            }`}
-          >
-            <span className="material-icons-round text-sm">star</span>
-            Melhor Avaliado
-          </button>
-          <button
-            onClick={() => setSortBy('price')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap shadow-sm transition-all ${
-              sortBy === 'price'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700'
-            }`}
-          >
-            Preço
-            <span className="material-icons-round text-sm">expand_more</span>
-          </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full text-sm font-semibold whitespace-nowrap shadow-sm border border-slate-100 dark:border-slate-700">
-            Disponível Hoje
-          </button>
-        </div>
-
-        {/* Metadata */}
-        <div className="mt-4 mb-6">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            <span className="font-bold text-slate-900 dark:text-slate-100">
-              {filteredProfessionals.length}
-            </span>{' '}
-            profissionais encontrados na sua região
-          </p>
-        </div>
-
-        {/* Professionals List */}
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          </div>
-        ) : filteredProfessionals.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-slate-500 dark:text-slate-400">
-              Nenhum profissional encontrado com esses critérios.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {filteredProfessionals.map((professional, index) => (
-              <div
-                key={professional.id}
-                className={`rounded-lg p-6 shadow-lg border transition-all ${
-                  index === 0
-                    ? 'bg-white dark:bg-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none border-2 border-amber-200/20'
-                    : 'bg-white dark:bg-slate-800 shadow-lg shadow-slate-200/40 dark:shadow-none border border-slate-50 dark:border-slate-700'
-                } relative overflow-hidden`}
-              >
-                {/* Destaque Badge (only first professional) */}
-                {index === 0 && (
-                  <div className="absolute top-0 right-0">
-                    <div className="bg-amber-400 text-white text-[10px] font-extrabold uppercase px-4 py-1 rounded-bl-lg tracking-widest flex items-center gap-1">
-                      <span className="material-icons-round text-xs">verified</span>
-                      Destaque
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex gap-4 items-start mb-4 pt-2">
-                  {/* Avatar */}
-                  <div className="relative flex-shrink-0">
-                    {professional.avatar ? (
-                      <img
-                        src={professional.avatar}
-                        alt={professional.name}
-                        className={`w-20 h-20 rounded-full object-cover ${
-                          index === 0 ? 'border-4 border-amber-200/20' : ''
-                        }`}
-                      />
-                    ) : (
-                      <div
-                        className={`w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl font-bold ${
-                          index === 0 ? 'border-4 border-amber-200/20' : ''
-                        }`}
-                      >
-                        {professional.name.charAt(0)}
-                      </div>
-                    )}
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1">
-                    <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
-                      {professional.name}
-                    </h2>
-                    <p className="text-blue-600 dark:text-blue-400 font-bold text-sm">
-                      {professional.category}
-                    </p>
-                    <div className="flex items-center gap-1 mt-1 text-amber-400">
-                      <span className="material-icons-round text-lg">star</span>
-                      <span className="text-slate-900 dark:text-slate-100 font-bold text-sm">
-                        {professional.rating.toFixed(1)}
-                      </span>
-                      <span className="text-slate-400 dark:text-slate-500 text-xs font-medium">
-                        ({professional.reviewCount} avaliações)
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-6 line-clamp-2">
-                  {professional.about || `Profissional especializado em ${professional.category}`}
-                </p>
-
-                {/* Buttons */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => navigate(`/profile/${professional.id}`)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-full py-3.5 font-bold text-sm transition-all shadow-lg shadow-blue-600/25"
-                  >
-                    Ver Perfil
-                  </button>
-                  <button className="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-900 dark:text-white rounded-full py-3.5 font-bold text-sm transition-all flex items-center justify-center gap-2">
-                    <span className="material-icons-round text-green-600 text-xl">chat</span>
-                    Conversar
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-
-      {/* Map Toggle FAB */}
-      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40">
-        <button className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-blue-600 text-white rounded-full shadow-2xl shadow-black/30 font-bold text-sm hover:opacity-90 transition-opacity max-w-md">
-          <span className="material-icons-round text-sm">map</span>
-          Ver no Mapa
+      {/* Filters */}
+      <div className="pl-5 pb-6 overflow-x-auto hide-scrollbar flex gap-3 sticky top-[152px] bg-background-light dark:bg-background-dark z-30 py-2">
+        <button
+          onClick={() => setSortBy('rating')}
+          className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-semibold shadow-md transition-transform active:scale-95 ${
+            sortBy === 'rating'
+              ? 'bg-primary text-gray-900 shadow-primary/20'
+              : 'bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-primary/50'
+          }`}
+        >
+          Recomendados
+        </button>
+        <button className="whitespace-nowrap px-5 py-2.5 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 font-medium text-sm hover:border-primary/50 transition-all active:scale-95">
+          Mais Referências
+        </button>
+        <button className="whitespace-nowrap px-5 py-2.5 rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 font-medium text-sm hover:border-primary/50 transition-all active:scale-95">
+          Melhor Avaliados
         </button>
       </div>
 
-      {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 px-8 py-3 flex justify-between items-center z-40 max-w-md mx-auto">
+      {/* Main Content */}
+      <main className="px-5 space-y-5">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : filteredProfessionals.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">Nenhum profissional encontrado.</p>
+          </div>
+        ) : (
+          filteredProfessionals.map((prof, index) => (
+            <article
+              key={prof.id}
+              className="bg-white dark:bg-white/5 rounded-2xl p-5 shadow-soft border border-gray-100 dark:border-white/5 relative overflow-hidden group"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex gap-4">
+                  {/* Avatar */}
+                  <div className="relative">
+                    {prof.avatar ? (
+                      <img
+                        alt={prof.name}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-sm"
+                        src={prof.avatar}
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center border-2 border-white dark:border-gray-700 shadow-sm text-white text-2xl font-bold">
+                        {prof.name.charAt(0)}
+                      </div>
+                    )}
+                    <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center">
+                      <span className="block w-2.5 h-2.5 bg-white rounded-full"></span>
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                      {prof.name}
+                    </h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
+                      {prof.location} {prof.location && '•'} {prof.location ? '0.5km' : ''}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary-dark dark:text-primary text-xs font-bold uppercase tracking-wide border border-primary/20">
+                        <span className="material-icons-round text-sm">emoji_events</span>
+                        Nível Ouro
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400 text-xs font-bold border border-green-100 dark:border-green-500/20">
+                        <span className="material-icons-round text-sm">schedule</span>
+                        100% Assiduidade
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Score Shield */}
+                <div className="flex flex-col items-center">
+                  <div className="w-14 h-16 bg-gradient-to-b from-primary to-yellow-500 trust-shield flex flex-col items-center justify-center shadow-lg shadow-yellow-500/30 text-white pt-1">
+                    <span className="text-[10px] font-medium opacity-90 uppercase tracking-tight -mb-1">Score</span>
+                    <span className="text-xl font-black tracking-tighter">
+                      {(prof.rating / 2).toFixed(1)}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 mt-1 font-medium">Confia</span>
+                </div>
+              </div>
+
+              <div className="w-full h-px bg-gray-100 dark:bg-white/10 mb-4"></div>
+
+              {/* Price and Action */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-400 font-medium">Investimento Estimado</span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
+                    R$ 180 - R$ 220
+                  </span>
+                </div>
+                <button
+                  onClick={() => navigate(`/profile/${prof.id}`)}
+                  className="flex-1 max-w-[140px] bg-action-blue hover:bg-action-blue-hover text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-blue-900/10 active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
+                >
+                  Ver Perfil
+                  <span className="material-icons-round text-sm">arrow_forward</span>
+                </button>
+              </div>
+            </article>
+          ))
+        )}
+      </main>
+
+      {/* Bottom Nav - Only Search */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1a170d] border-t border-gray-100 dark:border-white/5 pb-6 pt-2 px-6 flex justify-center items-center z-50 rounded-t-2xl shadow-[0_-5px_20px_rgba(0,0,0,0.03)] max-w-md mx-auto">
         <button
           onClick={() => navigate('/')}
-          className="flex flex-col items-center text-blue-600 hover:opacity-80"
+          className="flex flex-col items-center gap-1 p-2 text-primary hover:opacity-80"
         >
-          <span className="material-icons-round">search</span>
-          <span className="text-[10px] font-bold mt-1">Buscar</span>
-        </button>
-        <button className="flex flex-col items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-          <span className="material-icons-round">calendar_today</span>
-          <span className="text-[10px] font-bold mt-1">Agendados</span>
-        </button>
-        <button className="flex flex-col items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-          <span className="material-icons-round">chat_bubble_outline</span>
-          <span className="text-[10px] font-bold mt-1">Chat</span>
-        </button>
-        <button
-          onClick={() => navigate('/login')}
-          className="flex flex-col items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-        >
-          <span className="material-icons-round">person_outline</span>
-          <span className="text-[10px] font-bold mt-1">Perfil</span>
+          <span className="material-icons-round text-2xl">search</span>
+          <span className="text-[10px] font-bold">Buscar</span>
         </button>
       </nav>
+    </div>
+  );
     </div>
   );
 };

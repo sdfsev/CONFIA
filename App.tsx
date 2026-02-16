@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LandingView from './views/LandingView';
 import LoginView from './views/LoginView';
 import RegisterView from './views/RegisterView';
+import ProfessionalRegisterView from './views/ProfessionalRegisterView';
 import HomeView from './views/HomeView';
 import SearchView from './views/SearchView';
 import SearchResultsView from './views/SearchResultsView';
@@ -33,7 +34,7 @@ const AppContent: React.FC = () => {
   }, [isDark]);
 
   // Hide BottomNav on certain screens
-  const publicPages = ['/', '/login', '/register'];
+  const publicPages = ['/', '/login', '/register', '/professional-register', '/search-results'];
   const hideNav = publicPages.includes(location.pathname) || ['/onboarding', '/admin'].includes(location.pathname);
 
   return (
@@ -43,6 +44,7 @@ const AppContent: React.FC = () => {
         <Route path="/" element={<LandingView />} />
         <Route path="/login" element={<LoginView />} />
         <Route path="/register" element={<RegisterView />} />
+        <Route path="/professional-register" element={<ProfessionalRegisterView />} />
         <Route path="/search-results" element={<SearchResultsView />} />
         
         {/* Protected Routes */}

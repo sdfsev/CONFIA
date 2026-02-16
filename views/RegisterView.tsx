@@ -240,6 +240,19 @@ const RegisterView: React.FC = () => {
               </Link>
             </p>
           </div>
+
+          {/* Professional Registration Link */}
+          <div className="mt-6 pt-6 border-t border-white/10">
+            <p className="text-center text-slate-400 text-sm">
+              É profissional? Registre-se como{' '}
+              <Link
+                to="/professional-register"
+                className="text-primary font-bold hover:text-primary-dark transition-colors"
+              >
+                profissional
+              </Link>
+            </p>
+          </div>
         </div>
 
         {/* Footer */}
